@@ -1,4 +1,4 @@
-1) How can you retrieve all the information from the cd.facilities table?![image](~./images/1.png)
+1) How can you retrieve all the information from the cd.facilities table?![image](/images/1.png)
 2) You want to print out a list of all of the facilities and their cost to members. How would you retrieve a list of only facility names and costs?![image](/images/2.png)
 3) How can you produce a list of facilities that charge a fee to members?![image](/images/3.png)
 4) How can you produce a list of facilities that charge a fee to members, and that fee is less than 1/50th of the monthly maintenance cost? Return the facid, facility name, member cost, and monthly maintenance of the facilities in question.![image](/images/4.png)
