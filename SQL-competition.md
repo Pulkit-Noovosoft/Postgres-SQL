@@ -1,5 +1,5 @@
 [//]: # (Pulkit)
-1) Find the Indian Staff whose goods are used in making Hindi films with rating 7.5 or above.
+1) Find the Indian Staff from whom customer rented film language id 1.
 ```postgresql
    Select count(*)
    from country c
@@ -12,15 +12,16 @@
    where c.country = 'India'
    and f.language_id = 1;
 ```
-2) Find the Location of stores whose goods are used for making films whose release year is 2005.
+2) Find the Location of store where film was rented whose release year is 2006.
 ```postgresql
 Select a.district, film.film_id
 from address a
-         inner join staff on a.address_id = staff.address_id
+         inner join store on a.address_id = store.address_id
+         inner join staff on store.address_id = staff.address_id
          inner join rental on staff.staff_id = rental.staff_id
          inner join inventory on rental.inventory_id = inventory.inventory_id
          inner join film on film.film_id = inventory.film_id
-where film.release_year = 2005
+where film.release_year = 2006
 group by a.district, film.film_id;
 ```
 [//]: # (Shreyash)
@@ -31,19 +32,20 @@ from actor
          inner join film_actor on actor.actor_id = film_actor.actor_id
          inner join film on film_actor.film_id = film.film_id
 where release_year = 2006
+order by name
 LIMIT 25;
 ```
 4) select the staffs firstname and lastname in one column and their whole payment
 ```postgresql
-Select concat(actor.first_name, actor.last_name) as name, payment.amount
-from actor
-         inner join film_actor on actor.actor_id = film_actor.actor_id
-         inner join film on film_actor.film_id = film.film_id
-         inner join inventory on film.film_id = inventory.film_id
-         inner join rental on inventory.inventory_id = rental.inventory_id
-         inner join payment on rental.rental_id = payment.rental_id
-group by name, payment_id;
+select concat(s.first_name, ' ', s.last_name) as staff_name,
+       sum(p.amount) as payment
+from staff s
+         inner join payment p
+                    on s.staff_id = p.staff_id
+group by staff_name;
 ```
+
+[//]: # (Nandini)
 5) list out all films with highest rental rate  and classify the films labelled as "inappropriate for children under 13" with ratings PG-13 , "General" with ratings as G and " Restricted for Age below 18" with ratings as R
 ```postgresql
 select film.title,
@@ -85,7 +87,7 @@ from actor
          inner join rental on inventory.inventory_id = rental.inventory_id
          inner join customer on rental.customer_id = customer.customer_id
 group by actor_name, customer_name, rental.customer_id, actor.actor_id
-order by customer_name, actor_name;
+order by movies desc;
 
 ```
 8) List out top 10 most revenue generated district to release animated film with average price running on that district
@@ -98,7 +100,8 @@ from address
          inner join inventory on rental.inventory_id = inventory.inventory_id
          inner join film on inventory.film_id = film.film_id
 group by address.district, payment.customer_id
-order by sum(amount);
+order by total_amount desc limit 10;
+
 ```
 
 [//]: # (Sadid)
@@ -117,7 +120,7 @@ order by actor_name;
 [//]: # (Vaishnav)
 10)  What are the top 10 films that have been rented by customers in the United States, and how many times have they been rented?
 ```postgresql
-Select film.title, count(rental.rental_id) as rental_films
+Select film.title, count(country.country) as rental_films
 from film
          inner join inventory on film.film_id = inventory.film_id
          inner join rental on inventory.inventory_id = rental.inventory_id
@@ -127,7 +130,7 @@ from film
          inner join country on city.country_id = country.country_id
 where country = 'United States'
 group by film.title
-order by rental_films
+order by rental_films desc
 limit 10;
 ```
 11) What is the average rental duration for the top 5 films that have been rented by customers in each country?
@@ -149,15 +152,17 @@ limit 5;
 [//]: # (Tejas)
 12) Query to Find Actors Who Have Collaborated the Most.
 ```postgresql
-select concat(a1.first_name, ' ', a1.last_name) as actor1,
-       concat(a2.first_name, ' ', a2.last_name) as actor2,
-       count(*)                                 as film_together
-from actor a1
-         inner join actor a2 on a1.actor_id < a2.actor_id
-         inner join film_actor fa1 on fa1.actor_id = a1.actor_id
-         inner join film_actor fa2 on fa2.actor_id = a2.actor_id
-group by actor1, actor2
-order by film_together desc limit 10;
+SELECT a1.actor_id AS actor1_id,a1.first_name AS actor1_first_name,
+       a2.actor_id AS actor2_id,
+       a2.first_name AS actor2_first_name,
+       COUNT(DISTINCT fa1.film_id) AS shared_film_count
+FROM actor a1
+         JOIN film_actor fa1 ON a1.actor_id = fa1.actor_id
+         JOIN film_actor fa2 ON fa1.film_id = fa2.film_id AND fa1.actor_id != fa2.actor_id
+         JOIN actor a2 ON fa2.actor_id = a2.actor_id
+GROUP BY a1.actor_id, a1.first_name, a2.actor_id, a2.first_name
+ORDER BY shared_film_count DESC
+LIMIT 1;
 ```
 13) Query to Find Countries with the Longest Average Address Street Length.
 ```postgresql
@@ -171,3 +176,17 @@ order by street_length desc;
 ```
 
 [//]: # (Sadid-2)
+14) Find the category which was rented the most for each month in year 2005, if there is a tie find all categories. Sorted by months and category names. Output should contain month, category, count. You can ignore the month if there is no data present for it.
+```postgresql
+select c.name , count(*) from film f
+                                  inner join inventory i
+                                             on f.film_id = i.film_id
+                                  inner join rental
+                                             on i.inventory_id = rental.inventory_id
+                                  inner join film_category fc
+                                             on f.film_id = fc.film_id
+                                  inner join category c
+                                             on fc.category_id = c.category_id
+group by c.name
+order by count(*) desc;
+```
