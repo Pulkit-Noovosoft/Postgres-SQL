@@ -62,15 +62,15 @@ order by film.title;
 ```
 6) list the top 3 actors with maximum sci-fi movies and highest payment amount
 ```postgresql
-Select actor.first_name, actor.last_name, category.name, count(*) as count
+Select actor.first_name || ' ' || actor.last_name as actor_name, count(*) as count
 from actor
          inner join film_actor on actor.actor_id = film_actor.actor_id
          inner join film on film_actor.film_id = film.film_id
          inner join film_category on film.film_id = film_category.film_id
          inner join category on film_category.category_id = category.category_id
 where category.name = 'Sci-Fi'
-group by first_name, last_name, category.name, film.rental_rate
-order by count(*), film.rental_rate desc
+group by actor_name, actor.actor_id, film.rental_rate
+order by film.rental_rate, count desc
 limit 3;
 ```
 
@@ -92,15 +92,26 @@ order by movies desc;
 ```
 8) List out top 10 most revenue generated district to release animated film with average price running on that district
 ```postgresql
-Select address.district, sum(amount) as total_amount
-from address
-         inner join customer on address.address_id = customer.address_id
-         inner join payment on customer.customer_id = payment.customer_id
-         inner join rental on customer.customer_id = rental.customer_id
-         inner join inventory on rental.inventory_id = inventory.inventory_id
-         inner join film on inventory.film_id = film.film_id
-group by address.district, payment.customer_id
-order by total_amount desc limit 10;
+select address.district, round(avg(rental_rate), 2)
+from film
+         inner join film_category
+                    on film.film_id = film_category.film_id
+         inner join category
+                    on film_category.category_id = category.category_id
+         inner join inventory
+                    on film.film_id = inventory.film_id
+         inner join rental
+                    on inventory.inventory_id = rental.inventory_id
+         inner join payment
+                    on rental.rental_id = payment.rental_id
+         inner join customer
+                    on payment.customer_id = customer.customer_id
+         inner join address
+                    on customer.address_id = address.address_id
+where category.name = 'Animation'
+group by address.district
+order by sum(amount) desc
+LIMIT 10;
 
 ```
 
