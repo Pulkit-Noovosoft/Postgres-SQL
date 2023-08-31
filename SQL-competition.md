@@ -90,15 +90,15 @@ order by customer_name, actor_name;
 ```
 8) List out top 10 most revenue generated district to release animated film with average price running on that district
 ```postgresql
-Select address.district,sum(amount) as total_amount from address
-inner join customer on address.address_id = customer.address_id
-inner join payment on customer.customer_id = payment.customer_id
-inner join rental on customer.customer_id = rental.customer_id
-inner join inventory on rental.inventory_id = inventory.inventory_id
-inner join film on inventory.film_id = film.film_id
-group by address.district,payment.customer_id
+Select address.district, sum(amount) as total_amount
+from address
+         inner join customer on address.address_id = customer.address_id
+         inner join payment on customer.customer_id = payment.customer_id
+         inner join rental on customer.customer_id = rental.customer_id
+         inner join inventory on rental.inventory_id = inventory.inventory_id
+         inner join film on inventory.film_id = film.film_id
+group by address.district, payment.customer_id
 order by sum(amount);
-
 ```
 
 [//]: # (Sadid)
@@ -114,3 +114,60 @@ having count(language) > 1
 order by actor_name;
 ```
 
+[//]: # (Vaishnav)
+10)  What are the top 10 films that have been rented by customers in the United States, and how many times have they been rented?
+```postgresql
+Select film.title, count(rental.rental_id) as rental_films
+from film
+         inner join inventory on film.film_id = inventory.film_id
+         inner join rental on inventory.inventory_id = rental.inventory_id
+         inner join customer on rental.customer_id = customer.customer_id
+         inner join address on customer.address_id = address.address_id
+         inner join city on address.city_id = city.city_id
+         inner join country on city.country_id = country.country_id
+where country = 'United States'
+group by film.title
+order by rental_films
+limit 10;
+```
+11) What is the average rental duration for the top 5 films that have been rented by customers in each country?
+
+```postgresql
+Select c.country as top_country, film.title, avg(film.length) as duration
+from film
+         inner join inventory on film.film_id = inventory.film_id
+         inner join rental on inventory.inventory_id = rental.inventory_id
+         inner join customer on rental.customer_id = customer.customer_id
+         inner join address on customer.address_id = address.address_id
+         inner join city on address.city_id = city.city_id
+         inner join country c on city.country_id = c.country_id
+group by film.title, top_country
+order by duration desc
+limit 5;
+```
+
+[//]: # (Tejas)
+12) Query to Find Actors Who Have Collaborated the Most.
+```postgresql
+select concat(a1.first_name, ' ', a1.last_name) as actor1,
+       concat(a2.first_name, ' ', a2.last_name) as actor2,
+       count(*)                                 as film_together
+from actor a1
+         inner join actor a2 on a1.actor_id < a2.actor_id
+         inner join film_actor fa1 on fa1.actor_id = a1.actor_id
+         inner join film_actor fa2 on fa2.actor_id = a2.actor_id
+group by actor1, actor2
+order by film_together desc limit 10;
+```
+13) Query to Find Countries with the Longest Average Address Street Length.
+```postgresql
+Select country.country,
+       avg(length(address.address)) as street_length
+from country
+         inner join city on country.country_id = city.country_id
+         inner join address on city.city_id = address.city_id
+group by country.country
+order by street_length desc;
+```
+
+[//]: # (Sadid-2)
